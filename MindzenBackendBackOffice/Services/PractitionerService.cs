@@ -27,5 +27,25 @@ namespace MindzenBackendBackOffice.Services
         {
             return await _practitionerModule.GetPractionerProfileDetails(UserId);
         }
+
+        public async Task<ApiResponse> SavePractitionerProfile(PractitionerProfileRequest request)
+        {
+            return await _practitionerModule.SavePractitionerProfile(request);
+        }
+
+        public async Task<ApiResponse> GetAllSpecializations()
+        {
+            return await _practitionerModule.GetAllSpecializations();
+        }
+
+        public async Task<ApiResponse> GetAllLanguages()
+        {
+            return await _practitionerModule.GetAllLanguages();
+        }
+
+        public async Task<ApiResponse> GetAllMentalHealthProfession()
+        {
+            return await _practitionerModule.GetAllMentalHealthProfession();
+        }
     }
 }

@@ -63,5 +63,61 @@ namespace MindzenBackendBackOffice.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
+
+        [HttpPost("savePractitionerProfile")]
+        public async Task<IActionResult> SavePractitionerProfile([FromBody] PractitionerProfileRequest request)
+        {
+            try
+            {
+                ApiResponse response = await practitioner.SavePractitionerProfile(request);
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        [HttpGet("getAllSpecializations")]
+        public async Task<IActionResult> GetAllSpecializations()
+        {
+            try
+            {
+                ApiResponse response = await practitioner.GetAllSpecializations();
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        [HttpGet("getAllLanguages")]
+        public async Task<IActionResult> GetAllLanguages()
+        {
+            try
+            {
+                ApiResponse response = await practitioner.GetAllLanguages();
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        [HttpGet("getAllMentalHealthProfessions")]
+        public async Task<IActionResult> GetAllMentalHealthProfession()
+        {
+            try
+            {
+                ApiResponse response = await practitioner.GetAllMentalHealthProfession();
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
     }
 }

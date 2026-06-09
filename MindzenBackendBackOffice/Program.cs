@@ -8,7 +8,6 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IPractitioner, PractitionerService>();
-builder.Services.AddHttpClient();
 builder.Services.AddScoped<IFile, FileService>();
 builder.Services.AddCors(options =>
 {

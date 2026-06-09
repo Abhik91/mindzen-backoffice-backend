@@ -1,39 +1,36 @@
+using Microsoft.AspNetCore.StaticFiles;
 using MindzenBackendBackOffice.Models;
 
 namespace MindzenBackendBackOffice.Modules.FileProcessing
 {
-    public class FileModule(IConfiguration configuration, IHttpClientFactory httpClientFactory)
+    public class FileModule(IWebHostEnvironment env)
     {
-        private readonly string _mainBackendUrl = configuration["MainBackend:BaseUrl"] ?? string.Empty;
+        private readonly FileExtensionContentTypeProvider _contentTypeProvider = new();
 
-        public async Task<ApiResponse> GetPractitionerProfilePic(string filePath)
+        public Task<ApiResponse> GetPractitionerProfilePic(string filePath)
         {
             ApiResponse apiResponse = new();
             try
             {
-                var client = httpClientFactory.CreateClient();
-                var url = $"{_mainBackendUrl}/api/file/unsigned-download?filePath={filePath}";
+                var fullPath = Path.Combine(env.ContentRootPath, filePath);
 
-                var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
-
-                if (!response.IsSuccessStatusCode)
+                if (!File.Exists(fullPath))
                 {
                     apiResponse.Success = false;
                     apiResponse.Message = "File not found";
-                    return apiResponse;
+                    return Task.FromResult(apiResponse);
                 }
 
-                var stream = await response.Content.ReadAsStreamAsync();
-                var contentType = response.Content.Headers.ContentType?.MediaType ?? "application/octet-stream";
-                var fileName = Path.GetFileName(filePath);
+                if (!_contentTypeProvider.TryGetContentType(fullPath, out var contentType))
+                    contentType = "application/octet-stream";
 
                 apiResponse.Success = true;
                 apiResponse.Message = "File found and ready to download";
                 apiResponse.Data = new CreatedFileContent
                 {
-                    Stream = stream,
+                    Stream = File.OpenRead(fullPath),
                     ContentType = contentType,
-                    FileName = fileName
+                    FileName = Path.GetFileName(fullPath)
                 };
             }
             catch (Exception ex)
@@ -41,6 +38,35 @@ namespace MindzenBackendBackOffice.Modules.FileProcessing
                 apiResponse.Success = false;
                 apiResponse.Message = "Error fetching file";
                 apiResponse.Data = new { errorMessage = ex.Message };
+            }
+            return Task.FromResult(apiResponse);
+        }
+
+        public async Task<ApiResponse> UploadFile(IFormFile formFile, string fileName, string directoryPath)
+        {
+            ApiResponse apiResponse = new();
+            try
+            {
+                var fullDirectoryPath = Path.Combine(env.ContentRootPath, directoryPath);
+
+                if (!Directory.Exists(fullDirectoryPath))
+                    Directory.CreateDirectory(fullDirectoryPath);
+
+                var fileNameWithExtension = fileName + Path.GetExtension(formFile.FileName);
+                var fullFilePath = Path.Combine(fullDirectoryPath, fileNameWithExtension);
+
+                using var stream = new FileStream(fullFilePath, FileMode.Create);
+                await formFile.CopyToAsync(stream);
+
+                apiResponse.Success = true;
+                apiResponse.Message = "File uploaded successfully";
+                apiResponse.Data = new { relativeFilePath = Path.Combine(directoryPath, fileNameWithExtension).Replace('\\', '/') };
+            }
+            catch (Exception ex)
+            {
+                apiResponse.Success = false;
+                apiResponse.Message = "File failed to upload";
+                apiResponse.Data = new { errorMessage = ex.Message, errorStackTrace = ex.StackTrace };
             }
             return apiResponse;
         }

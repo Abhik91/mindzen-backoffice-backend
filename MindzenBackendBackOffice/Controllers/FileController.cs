@@ -27,5 +27,20 @@ namespace MindzenBackendBackOffice.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
+
+         [HttpPost]
+        [Route("upload")]
+        public async Task<IActionResult> UploadFile([FromForm] UploadRequest uploadRequest)
+        {
+            if (uploadRequest.UploadFile == null || uploadRequest.UploadFile.Length == 0)
+                return BadRequest("No file uploaded.");
+
+            var response = await file.UploadFile(uploadRequest.UploadFile, uploadRequest.FileName, uploadRequest.DirectoryPath);
+            if (!response.Success)
+                return StatusCode(500, "Internal server error: File upload failed.");
+
+            // string fileUrl = $"{Request.Scheme}://{Request.Host}/api/File/files/{relativeFilePath}";
+            return Ok(response);
+        }
     }
 }

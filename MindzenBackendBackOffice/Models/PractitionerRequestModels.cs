@@ -6,6 +6,12 @@ namespace MindzenBackendBackOffice.Models
         public bool IsFeatured { get; set; }
     }
 
+    public class UpdateIsListedRequest
+    {
+        public string? UserID { get; set; }
+        public bool IsListed { get; set; }
+    }
+
     public class FeaturedPractitionerOrderItem
     {
         public string? UserID { get; set; }
@@ -25,6 +31,7 @@ namespace MindzenBackendBackOffice.Models
         public string? PhoneNumber { get; set; }
         public string? PracticingSince { get; set; }
         public string? AboutMe { get; set; }
+        public string? RciLicenseNumber { get; set; }
         public string? SingleSessionCharge { get; set; }
         public string? TwoSessionCharge { get; set; }
         public string? FourSessionCharge { get; set; }

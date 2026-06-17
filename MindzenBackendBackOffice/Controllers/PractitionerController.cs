@@ -78,6 +78,23 @@ namespace MindzenBackendBackOffice.Controllers
             }
         }
 
+        [HttpPost("updateIsListed")]
+        public async Task<IActionResult> UpdatePractitionerIsListedFlag([FromBody] UpdateIsListedRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(request.UserID))
+                    return BadRequest("UserID is required.");
+
+                ApiResponse response = await practitioner.UpdatePractitionerIsListedFlag(request.UserID, request.IsListed);
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
         [HttpGet("getAllSpecializations")]
         public async Task<IActionResult> GetAllSpecializations()
         {

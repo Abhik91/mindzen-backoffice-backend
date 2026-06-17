@@ -10,6 +10,7 @@ namespace MindzenBackofficeDatabaseLibrary.DataModels
         public string? PracticingSince { get; set; }
         public string? ProfilePicPath { get; set; }
         public string? AboutMe { get; set; }
+        public string? RciLicenseNumber { get; set; }
         public string? EducationalDegree { get; set; }
 
         public double SingleSessionCharge { get; set; }

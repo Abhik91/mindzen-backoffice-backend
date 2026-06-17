@@ -1,36 +1,36 @@
-using Microsoft.AspNetCore.StaticFiles;
 using MindzenBackendBackOffice.Models;
 
 namespace MindzenBackendBackOffice.Modules.FileProcessing
 {
-    public class FileModule(IWebHostEnvironment env)
+    public class FileModule(HttpClient httpClient, string mainBackendBaseUrl)
     {
-        private readonly FileExtensionContentTypeProvider _contentTypeProvider = new();
-
-        public Task<ApiResponse> GetPractitionerProfilePic(string filePath)
+        public async Task<ApiResponse> GetPractitionerProfilePic(string filePath)
         {
             ApiResponse apiResponse = new();
             try
             {
-                var fullPath = Path.Combine(env.ContentRootPath, filePath);
+                var response = await httpClient.GetAsync(
+                    $"{mainBackendBaseUrl}/api/file/unsigned-download?filePath={Uri.EscapeDataString(filePath)}");
 
-                if (!File.Exists(fullPath))
+                if (!response.IsSuccessStatusCode)
                 {
                     apiResponse.Success = false;
-                    apiResponse.Message = "File not found";
-                    return Task.FromResult(apiResponse);
+                    apiResponse.Message = "File not found on main backend";
+                    return apiResponse;
                 }
 
-                if (!_contentTypeProvider.TryGetContentType(fullPath, out var contentType))
-                    contentType = "application/octet-stream";
+                var contentType = response.Content.Headers.ContentType?.MediaType
+                                  ?? "application/octet-stream";
+                var fileName = response.Content.Headers.ContentDisposition?.FileName?.Trim('"')
+                               ?? Path.GetFileName(filePath);
 
                 apiResponse.Success = true;
-                apiResponse.Message = "File found and ready to download";
+                apiResponse.Message = "File fetched successfully";
                 apiResponse.Data = new CreatedFileContent
                 {
-                    Stream = File.OpenRead(fullPath),
+                    Stream = await response.Content.ReadAsStreamAsync(),
                     ContentType = contentType,
-                    FileName = Path.GetFileName(fullPath)
+                    FileName = fileName
                 };
             }
             catch (Exception ex)
@@ -39,7 +39,7 @@ namespace MindzenBackendBackOffice.Modules.FileProcessing
                 apiResponse.Message = "Error fetching file";
                 apiResponse.Data = new { errorMessage = ex.Message };
             }
-            return Task.FromResult(apiResponse);
+            return apiResponse;
         }
 
         public async Task<ApiResponse> UploadFile(IFormFile formFile, string fileName, string directoryPath)
@@ -47,26 +47,35 @@ namespace MindzenBackendBackOffice.Modules.FileProcessing
             ApiResponse apiResponse = new();
             try
             {
-                var fullDirectoryPath = Path.Combine(env.ContentRootPath, directoryPath);
+                using var formData = new MultipartFormDataContent();
 
-                if (!Directory.Exists(fullDirectoryPath))
-                    Directory.CreateDirectory(fullDirectoryPath);
+                var fileContent = new StreamContent(formFile.OpenReadStream());
+                fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(
+                    formFile.ContentType ?? "application/octet-stream");
 
-                var fileNameWithExtension = fileName + Path.GetExtension(formFile.FileName);
-                var fullFilePath = Path.Combine(fullDirectoryPath, fileNameWithExtension);
+                formData.Add(fileContent, "UploadFile", formFile.FileName);
+                formData.Add(new StringContent(fileName), "FileName");
+                formData.Add(new StringContent(directoryPath), "DirectoryPath");
 
-                using var stream = new FileStream(fullFilePath, FileMode.Create);
-                await formFile.CopyToAsync(stream);
+                var response = await httpClient.PostAsync(
+                    $"{mainBackendBaseUrl}/api/file/upload", formData);
 
-                apiResponse.Success = true;
-                apiResponse.Message = "File uploaded successfully";
-                apiResponse.Data = new { relativeFilePath = Path.Combine(directoryPath, fileNameWithExtension).Replace('\\', '/') };
+                var body = await response.Content.ReadFromJsonAsync<ApiResponse>();
+
+                if (body == null || !body.Success)
+                {
+                    apiResponse.Success = false;
+                    apiResponse.Message = "File upload failed on main backend";
+                    return apiResponse;
+                }
+
+                return body;
             }
             catch (Exception ex)
             {
                 apiResponse.Success = false;
                 apiResponse.Message = "File failed to upload";
-                apiResponse.Data = new { errorMessage = ex.Message, errorStackTrace = ex.StackTrace };
+                apiResponse.Data = new { errorMessage = ex.Message };
             }
             return apiResponse;
         }

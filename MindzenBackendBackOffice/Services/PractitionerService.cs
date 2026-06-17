@@ -33,6 +33,11 @@ namespace MindzenBackendBackOffice.Services
             return await _practitionerModule.SavePractitionerProfile(request);
         }
 
+        public async Task<ApiResponse> UpdatePractitionerIsListedFlag(string userId, bool isListed)
+        {
+            return await _practitionerModule.UpdatePractitionerIsListedFlag(userId, isListed);
+        }
+
         public async Task<ApiResponse> GetAllSpecializations()
         {
             return await _practitionerModule.GetAllSpecializations();

@@ -154,6 +154,29 @@ namespace MindzenBackendBackOffice.Modules.PractitionerDetails
         }
         #endregion
 
+        #region Update Practitioner IsListed Flag
+        public async Task<ApiResponse> UpdatePractitionerIsListedFlag(string userId, bool isListed)
+        {
+            ApiResponse apiResponse = new();
+            try
+            {
+                await _practitionerDataAccess.UpdatePractitionerIsListedFlag(userId, isListed);
+
+                apiResponse.Success = true;
+                apiResponse.Message = isListed
+                    ? "Practitioner enlisted successfully"
+                    : "Practitioner delisted successfully";
+            }
+            catch (Exception ex)
+            {
+                apiResponse.Success = false;
+                apiResponse.Message = "Error updating practitioner listed status";
+                apiResponse.Data = new { errorMessage = ex.Message, errorStackTrace = ex.StackTrace };
+            }
+            return apiResponse;
+        }
+        #endregion
+
         #region Get All Specializations
         public async Task<ApiResponse> GetAllSpecializations()
         {
@@ -258,6 +281,7 @@ namespace MindzenBackendBackOffice.Modules.PractitionerDetails
                 practitionerDbModel.PracticingSince = practitionerProfileRequest.PracticingSince;
                 practitionerDbModel.ProfilePicPath = practitionerProfileRequest.ProfilePicPath;
                 practitionerDbModel.AboutMe = practitionerProfileRequest.AboutMe;
+                practitionerDbModel.RciLicenseNumber = practitionerProfileRequest.RciLicenseNumber;
 
                 if (
                     Double.TryParse(

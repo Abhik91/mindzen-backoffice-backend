@@ -169,6 +169,7 @@ namespace MindzenBackofficeDatabaseLibrary.DataAccess.PractitionerDataAccess
                 parameters.Add("PracticingSince", practitionerProfileDbModel.PracticingSince);
                 parameters.Add("ProfilePicPath", practitionerProfileDbModel.ProfilePicPath);
                 parameters.Add("AboutMe", practitionerProfileDbModel.AboutMe);
+                parameters.Add("RciLicenseNumber", practitionerProfileDbModel.RciLicenseNumber);
                 parameters.Add("SingleSessionCharge", practitionerProfileDbModel.SingleSessionCharge);
                 parameters.Add("TwoSessionCharge", practitionerProfileDbModel.TwoSessionCharge);
                 parameters.Add("FourSessionCharge", practitionerProfileDbModel.FourSessionCharge);
@@ -297,6 +298,26 @@ namespace MindzenBackofficeDatabaseLibrary.DataAccess.PractitionerDataAccess
                     Global.MindzenConnectionString ?? string.Empty
                 );
                 return result;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+        #endregion
+
+        #region Update Practitioner IsListed Flag
+        public async Task<int> UpdatePractitionerIsListedFlag(string practitionerId, bool isListed)
+        {
+            try
+            {
+                var parameter = new { PractitionerId = practitionerId, IsListed = isListed };
+
+                return await _sqlDataAccess.SaveData(
+                    "dbo.UpdatePractitionerIsListedFlag",
+                    parameter,
+                    Global.MindzenConnectionString ?? string.Empty
+                );
             }
             catch (Exception)
             {
